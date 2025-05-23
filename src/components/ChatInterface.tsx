@@ -1,25 +1,29 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Send, User, Settings, Zap, Heart, Brain, Apple } from "lucide-react";
+import { Send, User, Settings, Zap, Heart, Brain, Apple, Trash2, Sparkles } from "lucide-react";
 import { ThemeToggle } from "./ThemeProvider";
 import OpenAI from "openai";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const ChatInterface = ({ userDetails, setUserDetails }) => {
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content: `Hey ${userDetails.name}! 👋 Welcome to FitBuddy! I'm here to be your personal health and wellness coach. Ready to crush your goals together? 💪✨`
-    }
-  ]);
+  const [messages, setMessages] = useState(() => {
+    // Load messages from localStorage on initial load
+    const savedMessages = localStorage.getItem(`chat_${userDetails.name}`);
+    return savedMessages ? JSON.parse(savedMessages) : [
+      {
+        role: "assistant",
+        content: `Hey ${userDetails.name}! 👋 Welcome to FitMe! I'm here to be your personal health and wellness coach. Ready to crush your goals together? 💪`
+      }
+    ];
+  });
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isThinking, setIsThinking] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef(null);
+  const [shouldSaveToLocalStorage, setShouldSaveToLocalStorage] = useState(true);
 
   // Initialize OpenAI client with the API key directly
   const openai = new OpenAI({
@@ -39,6 +43,13 @@ const ChatInterface = ({ userDetails, setUserDetails }) => {
     { icon: Brain, text: "Help me with stress", prompt: "Give me some tips to manage stress and feel better" }
   ];
 
+  // Save messages to localStorage whenever they change, but only if we should save
+  useEffect(() => {
+    if (messages.length > 0 && shouldSaveToLocalStorage) {
+      localStorage.setItem(`chat_${userDetails.name}`, JSON.stringify(messages));
+    }
+  }, [messages, userDetails.name, shouldSaveToLocalStorage]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -54,14 +65,19 @@ const ChatInterface = ({ userDetails, setUserDetails }) => {
     // Replace ** text ** with bold
     let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     
-    // Replace # Heading with header styling
-    formattedText = formattedText.replace(/^# (.*?)$/gm, '<h3 class="text-lg font-bold my-2">$1</h3>');
+    // Process headers - completely replace the entire line including # characters
+    formattedText = formattedText.replace(/^# (.*)$/gm, (_, title) => 
+      `<h3 class="text-lg font-bold my-2">${title}</h3>`
+    );
+    // Process subheaders - completely replace the entire line including ## characters
+    formattedText = formattedText.replace(/^## (.*)$/gm, (_, title) => 
+      `<h4 class="text-md font-semibold my-1">${title}</h4>`
+    );
     
-    // Replace ## Subheading with subheader styling
-    formattedText = formattedText.replace(/^## (.*?)$/gm, '<h4 class="text-md font-semibold my-1">$1</h4>');
-    
-    // Replace bulleted lists
-    formattedText = formattedText.replace(/^- (.*?)$/gm, '<li class="ml-4">• $1</li>');
+    // Replace bulleted lists with proper list items
+    formattedText = formattedText.replace(/^- (.*)$/gm, (_, content) => 
+      `<li class="ml-4">${content}</li>`
+    );
     
     // Convert line breaks to <br/>
     formattedText = formattedText.replace(/\n\n/g, '<br/>');
@@ -75,9 +91,14 @@ const ChatInterface = ({ userDetails, setUserDetails }) => {
 
     const userMessage = { role: "user", content: input };
     setInput("");
+    
+    // Temporarily disable saving to localStorage during streaming
+    setShouldSaveToLocalStorage(false);
+    
+    // Add user message
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
-    setIsThinking(true);
+    setIsStreaming(true);
 
     try {
       const systemPrompt = `You are FitBuddy, a certified virtual health and wellness coach inside a stylish, lovable fitness app. You chat with the user on a beautifully designed interface with soft shadows, rounded corners, and quick-access buttons for health tips. This app stores user data locally and allows them to reset their profile anytime.
@@ -111,9 +132,8 @@ FORMAT GUIDELINES:
 - Use - for bullet points
 - Use ** for bold text
 - Use emojis to make content engaging
-
-🚫 Do not respond to anything outside the health, fitness, or wellness scope.
-
+ 
+🚫 IMPORTANT: Do not entertain to any other topic except health, fitness, or wellness
 ✅ Always:
 Personalize suggestions to the user's profile.
 Encourage realistic goals and consistency.
@@ -123,7 +143,6 @@ Include mental wellness tips when needed.
 "Hey ${userDetails.name}, great to see you! 💪 Ready for a quick energy-boosting stretch? Let's gooo!"`;
 
       // Add initial empty message from assistant to start streaming
-      setIsThinking(false);
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
       const stream = await openai.chat.completions.create({
@@ -131,7 +150,7 @@ Include mental wellness tips when needed.
         messages: [
           { role: "system", content: systemPrompt },
           ...messages.map(msg => ({
-            role: msg.role === "user" ? "user" : "assistant",
+            role: msg.role as "user" | "assistant",
             content: msg.content
           })),
           { role: "user", content: userMessage.content }
@@ -154,6 +173,14 @@ Include mental wellness tips when needed.
           });
         }
       }
+      
+      // Stream completed - now save to localStorage
+      setShouldSaveToLocalStorage(true);
+      
+      // Explicitly save to localStorage with complete messages
+      const updatedMessages = [...messages.slice(0, -1), { role: "assistant", content: fullResponse }];
+      localStorage.setItem(`chat_${userDetails.name}`, JSON.stringify(updatedMessages));
+      
     } catch (error) {
       console.error("OpenAI API error:", error);
       let errorMessage = "⚠️ Error connecting to AI. Please try again.";
@@ -171,15 +198,14 @@ Include mental wellness tips when needed.
         console.error("Error parsing error message:", e);
       }
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: errorMessage,
-        },
-      ]);
+      // Update with error message and save to localStorage
+      const updatedMessages = [...messages, { role: "assistant", content: errorMessage }];
+      setMessages(updatedMessages);
+      localStorage.setItem(`chat_${userDetails.name}`, JSON.stringify(updatedMessages));
+      setShouldSaveToLocalStorage(true);
     } finally {
       setIsLoading(false);
+      setIsStreaming(false);
     }
   };
 
@@ -190,6 +216,15 @@ Include mental wellness tips when needed.
   const handleReset = () => {
     localStorage.clear();
     setUserDetails(null);
+  };
+
+  const handleClearChat = () => {
+    const welcomeMessage = {
+      role: "assistant",
+      content: `Hey ${userDetails.name}! 👋 Chat cleared. What would you like to talk about now?`
+    };
+    setMessages([welcomeMessage]);
+    localStorage.setItem(`chat_${userDetails.name}`, JSON.stringify([welcomeMessage]));
   };
 
   return (
@@ -203,14 +238,16 @@ Include mental wellness tips when needed.
             </div>
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                FitBuddy
+                FitMe
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Your AI Health Coach</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Your <strong className="text-purple-500">AI<Sparkles className="inline-block w-4 h-4 mb-1 ml-1" /></strong> Health Coach</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
+           
             <ThemeToggle />
             <Button
+              disabled={messages.length === 1}
               onClick={handleReset}
               variant="outline"
               size="sm"
@@ -235,14 +272,14 @@ Include mental wellness tips when needed.
             >
               {message.role === "assistant" && (
                 <Avatar className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500">
-                  <AvatarFallback>💪</AvatarFallback>
+                  <AvatarFallback><Sparkles className="text-yellow-500 h-5 w-5" /></AvatarFallback>
                 </Avatar>
               )}
               
-              <Card className={`max-w-xs sm:max-w-md lg:max-w-lg p-4 ${
+              <Card className={`min-w-[200px] max-w-xs sm:max-w-md lg:max-w-lg p-4 ${
                 message.role === "user"
                   ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white"
-                  : "bg-white dark:bg-gray-800 shadow-sm border-gray-200 dark:border-gray-700 dark:text-gray-100"
+                  : "bg-transparent"
               }`}>
                 {message.role === "assistant" ? (
                   <div 
@@ -264,30 +301,15 @@ Include mental wellness tips when needed.
             </div>
           ))}
           
-          {isThinking && (
+          {/* Loading indicator - only one will be displayed at a time */}
+          {isLoading && isStreaming && messages[messages.length - 1]?.content === "" && (
             <div className="flex gap-3 justify-start">
               <Avatar className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500">
-                <AvatarFallback>💪</AvatarFallback>
+                <AvatarFallback><Sparkles className="text-yellow-500 h-5 w-5" /></AvatarFallback>
               </Avatar>
-              <Card className="p-4 bg-white dark:bg-gray-800 shadow-sm border-gray-200 dark:border-gray-700">
-                <div className="flex flex-col gap-2">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Thinking...</p>
-                  <div className="flex gap-2">
-                    <Skeleton className="w-20 h-2" />
-                    <Skeleton className="w-10 h-2" />
-                    <Skeleton className="w-16 h-2" />
-                  </div>
-                </div>
-              </Card>
-            </div>
-          )}
-          {isLoading && !isThinking && (
-            <div className="flex gap-3 justify-start">
-              <Avatar className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500">
-                <AvatarFallback>💪</AvatarFallback>
-              </Avatar>
-              <Card className="p-4 bg-white dark:bg-gray-800 shadow-sm border-gray-200 dark:border-gray-700">
-                <div className="flex gap-1">
+              <Card className="min-w-[200px] p-4">
+                <div className="flex gap-1 items-center">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mr-2">Thinking</p>
                   <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
                   <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
                   <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
@@ -314,8 +336,10 @@ Include mental wellness tips when needed.
                   <prompt.icon className="h-4 w-4 text-purple-500 dark:text-purple-400" />
                   <span className="text-xs dark:text-gray-300">{prompt.text}</span>
                 </div>
+                
               </Button>
             ))}
+            
           </div>
 
           {/* Input Form */}
@@ -333,6 +357,16 @@ Include mental wellness tips when needed.
               className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-lg"
             >
               <Send className="h-4 w-4" />
+            </Button>
+             <Button
+               disabled={messages.length === 1 || isStreaming}
+              onClick={handleClearChat}
+              variant="outline"
+              size="sm"
+               className="h-auto p-3 text-left border-gray-200 dark:border-gray-700 hover:bg-purple-50 hover:border-purple-300 dark:hover:bg-purple-900/20 dark:hover:border-purple-600 transition-all duration-200"
+            >
+              <Trash2 className="h-4 w-4" />
+              <span className="text-xs dark:text-gray-300">Clear Chat</span>
             </Button>
           </form>
         </div>

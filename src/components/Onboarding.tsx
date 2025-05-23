@@ -1,11 +1,11 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, Target, Globe } from "lucide-react";
+import { Heart, Target, Globe, Sparkles } from "lucide-react";
+import { ThemeToggle } from "./ThemeProvider";
 
 const Onboarding = ({ onComplete }) => {
   const [step, setStep] = useState(1);
@@ -59,17 +59,21 @@ const Onboarding = ({ onComplete }) => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+      <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 backdrop-blur-sm dark:bg-gray-800/90">
         <CardHeader className="text-center pb-8">
+          <div className="flex justify-end">
+            <ThemeToggle />
+          </div>
           <div className="mx-auto w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center mb-4">
             <Heart className="h-8 w-8 text-white" />
           </div>
-          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-            Welcome to FitMe! 💪
+          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent flex items-center justify-center">
+            Welcome to FitMe AI <Sparkles className="h-6 w-6 text-purple-500 dark:text-white ml-2 mt-2" />
           </CardTitle>
-          <CardDescription className="text-gray-600">
+          <CardDescription className="text-gray-600 dark:text-gray-300">
+          
             Let's personalize your health journey <br />
-            Created with ❤️ by <a href="https://github.com/sahil-kumar-yadav" className="text-blue-500 hover:text-blue-600">Shekhar Joshi</a>
+            <span className="text-gray-500 dark:text-gray-400 text-xs">Created with ❤️ by <a href="/" className="text-blue-500 hover:text-blue-600 text-xs">Shekhar Joshi</a></span>
           </CardDescription>
         </CardHeader>
 
@@ -88,7 +92,7 @@ const Onboarding = ({ onComplete }) => {
                   placeholder="Enter your first name"
                   value={formData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
-                  className="border-gray-200 focus:border-purple-500"
+                  className="border-gray-200 focus:border-purple-500 dark:bg-gray-200 dark:text-gray-800"
                 />
               </div>
 
@@ -100,7 +104,7 @@ const Onboarding = ({ onComplete }) => {
                   placeholder="Age"
                   value={formData.age}
                   onChange={(e) => handleInputChange("age", e.target.value)}
-                  className="border-gray-200 focus:border-purple-500"
+                  className="border-gray-200 focus:border-purple-500 dark:bg-gray-200 dark:text-gray-800"
                 />
               </div>
             </div>
@@ -121,7 +125,7 @@ const Onboarding = ({ onComplete }) => {
                   placeholder="170"
                   value={formData.height}
                   onChange={(e) => handleInputChange("height", e.target.value)}
-                  className="border-gray-200 focus:border-purple-500"
+                  className="border-gray-200 focus:border-purple-500 dark:bg-gray-200 dark:text-gray-800"
                 />
               </div>
 
@@ -133,7 +137,7 @@ const Onboarding = ({ onComplete }) => {
                   placeholder="70"
                   value={formData.weight}
                   onChange={(e) => handleInputChange("weight", e.target.value)}
-                  className="border-gray-200 focus:border-purple-500"
+                  className="border-gray-200 focus:border-purple-500 dark:bg-gray-200 dark:text-gray-800"
                 />
               </div>
             </div>
@@ -149,7 +153,7 @@ const Onboarding = ({ onComplete }) => {
               <div className="space-y-2">
                 <Label>What's your main health goal?</Label>
                 <Select onValueChange={(value) => handleInputChange("goal", value)}>
-                  <SelectTrigger className="border-gray-200 focus:border-purple-500">
+                  <SelectTrigger className="border-gray-200 focus:border-purple-500 dark:bg-gray-200 dark:text-gray-800">
                     <SelectValue placeholder="Choose your goal" />
                   </SelectTrigger>
                   <SelectContent>
@@ -165,7 +169,7 @@ const Onboarding = ({ onComplete }) => {
               <div className="space-y-2">
                 <Label>Where are you located?</Label>
                 <Select onValueChange={(value) => handleInputChange("country", value)}>
-                  <SelectTrigger className="border-gray-200 focus:border-purple-500">
+                  <SelectTrigger className="border-gray-200 focus:border-purple-500 dark:bg-gray-200 dark:text-gray-800">
                     <SelectValue placeholder="Select country" />
                   </SelectTrigger>
                   <SelectContent>
