@@ -3,12 +3,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Send, User, Settings, Zap, Heart, Brain, Apple, Trash2, Sparkles } from "lucide-react";
+import { Send, User, Settings, Zap, Heart, Brain, Apple, Trash2, ArrowLeft, Sparkles, Menu, X } from "lucide-react";
 import { ThemeToggle } from "./ThemeProvider";
 import OpenAI from "openai";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-const ChatInterface = ({ userDetails, setUserDetails }) => {
+const ChatInterface = ({ userDetails, setUserDetails, onBackToDashboard }) => {
   const [messages, setMessages] = useState(() => {
     // Load messages from localStorage on initial load
     const savedMessages = localStorage.getItem(`chat_${userDetails.name}`);
@@ -24,6 +30,7 @@ const ChatInterface = ({ userDetails, setUserDetails }) => {
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef(null);
   const [shouldSaveToLocalStorage, setShouldSaveToLocalStorage] = useState(true);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // Initialize OpenAI client with the API key directly
   const openai = new OpenAI({
@@ -106,6 +113,7 @@ const ChatInterface = ({ userDetails, setUserDetails }) => {
 🎯 User Profile:
 Name: ${userDetails.name}
 Age: ${userDetails.age}
+Gender: ${userDetails.gender}
 Height: ${userDetails.height} cm
 Weight: ${userDetails.weight} kg
 Goal: ${userDetails.goal}
@@ -230,32 +238,84 @@ Include mental wellness tips when needed.
   return (
     <div className="min-h-screen flex flex-col dark:bg-gray-900 transition-colors duration-300">
       {/* Header */}
-      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 p-4 shadow-sm transition-colors duration-300">
+      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 p-3 shadow-sm transition-colors duration-300">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
-              <Heart className="h-5 w-5 text-white" />
+          {/* Logo and title section - simplified for mobile */}
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+              <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                 FitMe
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Your <strong className="text-purple-500">AI<Sparkles className="inline-block w-4 h-4 mb-1 ml-1" /></strong> Health Coach</p>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                Your <strong className="text-purple-500">AI<Sparkles className="inline-block w-3 h-3 sm:w-4 sm:h-4 mb-0.5 ml-0.5" /></strong> Health Coach
+              </p>
             </div>
           </div>
+
+          {/* Mobile menu button - only shown on small screens */}
           <div className="flex items-center gap-2">
-           
-            <ThemeToggle />
             <Button
-              disabled={messages.length === 1}
-              onClick={handleReset}
+              onClick={onBackToDashboard}
               variant="outline"
               size="sm"
-              className="border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+              className="h-8 w-8 p-0 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 sm:mr-1"
             >
-              <Settings className="h-4 w-4 mr-2" />
-              Reset Profile
+              <ArrowLeft className="h-4 w-4" />
+              <span className="sr-only">Back to Dashboard</span>
             </Button>
+
+            {/* Theme toggle and settings for mobile */}
+            <div className="hidden sm:flex items-center gap-2">
+              <ThemeToggle />
+              <Button
+                disabled={messages.length === 1 || isStreaming}
+                onClick={handleReset}
+                variant="outline"
+                size="sm"
+                className="border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Reset Profile
+              </Button>
+            </div>
+
+            {/* Dropdown menu for mobile */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild className="sm:hidden">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="h-8 w-8 p-0 border-gray-200 dark:border-gray-700"
+                >
+                  <Menu className="h-4 w-4" />
+                  <span className="sr-only">Menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem onSelect={() => document.querySelector("[data-theme-toggle]")?.click()}>
+                  <span className="mr-2">☀️/🌙</span> Toggle Theme
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  disabled={messages.length === 1 || isStreaming}
+                  onSelect={handleReset}
+                  className="flex items-center"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Reset Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  disabled={messages.length === 1 || isStreaming}
+                  onSelect={handleClearChat}
+                  className="flex items-center"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Clear Chat
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

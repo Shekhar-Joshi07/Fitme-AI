@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, Target, Globe, Sparkles } from "lucide-react";
+import { Heart, Target, Globe, Sparkles, User } from "lucide-react";
 import { ThemeToggle } from "./ThemeProvider";
 
 const Onboarding = ({ onComplete }) => {
@@ -15,7 +15,8 @@ const Onboarding = ({ onComplete }) => {
     height: "",
     weight: "",
     goal: "",
-    country: ""
+    country: "",
+    gender: ""
   });
 
   const goals = [
@@ -30,6 +31,10 @@ const Onboarding = ({ onComplete }) => {
   const countries = [
     "United States", "United Kingdom", "Canada", "Australia", "Germany", 
     "France", "Spain", "Italy", "Japan", "India", "Brazil", "Mexico", "Other"
+  ];
+
+  const genders = [
+    "Male", "Female", "Non-binary", "Prefer not to say"
   ];
 
   const handleInputChange = (field, value) => {
@@ -47,7 +52,7 @@ const Onboarding = ({ onComplete }) => {
   const isStepValid = () => {
     switch (step) {
       case 1:
-        return formData.name && formData.age;
+        return formData.name && formData.age && formData.gender;
       case 2:
         return formData.height && formData.weight;
       case 3:
@@ -106,6 +111,25 @@ const Onboarding = ({ onComplete }) => {
                   onChange={(e) => handleInputChange("age", e.target.value)}
                   className="border-gray-200 focus:border-purple-500 dark:bg-gray-200 dark:text-gray-800"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label>What's your gender?</Label>
+                <Select onValueChange={(value) => handleInputChange("gender", value)}>
+                  <SelectTrigger className="border-gray-200 focus:border-purple-500 dark:bg-gray-200 dark:text-gray-800">
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {genders.map((gender) => (
+                      <SelectItem key={gender} value={gender}>
+                        {gender}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  For accurate health metrics calculation
+                </p>
               </div>
             </div>
           )}
