@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Send, User, Settings, Zap, Heart, Brain, Apple, Trash2, ArrowLeft, Sparkles, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import { ThemeToggle } from "./ThemeProvider";
-import { Skeleton } from "@/components/ui/skeleton";
+
 declare global {
   interface Window {
     webkitSpeechRecognition: any;
@@ -205,7 +205,8 @@ const handleSubmit = async (e, directPrompt = null) => {
     // Add system prompt only to the first user message
    if (messages.length === 1) {
       const systemPrompt = `You are FitBuddy, a certified virtual health and wellness coach inside a stylish, lovable fitness app. You chat with the user on a beautifully designed interface with soft shadows, rounded corners, and quick-access buttons for health tips. This app stores user data locally and allows them to reset their profile anytime.
-
+ 
+🚫 IMPORTANT: Do not entertain to any other topic except health, fitness, or wellness
 🎯 User Profile:
 Name: ${userDetails.name}
 Age: ${userDetails.age}
@@ -236,8 +237,7 @@ FORMAT GUIDELINES:
 - Use - for bullet points
 - Use ** for bold text
 - Use emojis to make content engaging
- 
-🚫 IMPORTANT: Do not entertain to any other topic except health, fitness, or wellness
+
 ✅ Always:
 Personalize suggestions to the user's profile.
 Encourage realistic goals and consistency.
@@ -257,7 +257,16 @@ User Query: ${messageContent}`;
         parts: [{ text: systemPrompt }],
         role: "user"
       };
+    } else{
+
+        const reminder = `[REMEMBER: You are FitBuddy. ONLY answer health/fitness/wellness topics. Redirect everything else.]
+         User (${userDetails.name}): ${messageContent}`;
+      conversationHistory[conversationHistory.length - 1] = {
+        parts: [{ text: reminder }],
+        role: "user"
+      };
     }
+    
     
     const VITE_GEMINI_URL = import.meta.env.VITE_GEMINI_URL;
     const response = await fetch(VITE_GEMINI_URL, {
