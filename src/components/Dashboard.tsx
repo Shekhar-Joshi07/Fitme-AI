@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Avatar,AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "./ThemeProvider";
-import { Heart, Dumbbell, Utensils, Calculator, MapPin, ArrowRight, Settings, MessageSquare, Sparkles, Info } from "lucide-react";
+import { Heart, Dumbbell, Utensils, Calculator, MapPin, ArrowRight, Settings, MessageSquare, Sparkles, Info, ShoppingBag, Package, Zap } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import amazonIcon from "@/assets/icons/icons8-amazon-shopping-app-48.png";
+import flipkartIcon from "@/assets/icons/flipkart-icon.png";
 import {
   Dialog,
   DialogContent,
@@ -881,7 +884,96 @@ const Dashboard = ({ userDetails, setUserDetails, startChat }) => {
               </div>
             </CardContent>
           </Card>
-
+           {/* Fitness Shop Card */}
+            <Card className="shadow-md border-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
+              <CardHeader className="pb-2">
+                <div className="flex items-center mb-2">
+                  <ShoppingBag className="h-5 w-5 text-indigo-500 mr-2" />
+                  <CardTitle className="text-lg">Fitness Equipment & Supplements</CardTitle>
+                </div>
+                <CardDescription>Shop for your fitness journey needs</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                      onClick={() => window.open('https://www.amazon.in/s?k=home+gym+equipment&crid=2XN4VWZ6N4X6L&sprefix=home+gym+equip%2Caps%2C201', '_blank')}
+                      variant="outline" 
+                      className="text-xs border-indigo-300 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-900/20"
+                    >
+                      <Package className="h-3 w-3 mr-1" />
+                      Home Gym
+                    </Button>
+                    <Button 
+                      onClick={() => window.open('https://www.flipkart.com/search?q=dumbbells&sid=qoc%2Cacb%2Ck03&as=on&as-show=on&otracker=AS_QueryStore_OrganicAutoSuggest_1_5_na_na_na', '_blank')}
+                      variant="outline" 
+                      className="text-xs border-indigo-300 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-900/20"
+                    >
+                      <Dumbbell className="h-3 w-3 mr-1" />
+                      Dumbbells
+                    </Button>
+                    <Button 
+                      onClick={() => window.open('https://www.amazon.in/s?k=whey+protein&crid=2IMOVHD1A3QWM&sprefix=whey+protei%2Caps%2C210', '_blank')}
+                      variant="outline" 
+                      className="text-xs border-indigo-300 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-900/20"
+                    >
+                      <Zap className="h-3 w-3 mr-1" />
+                      Protein
+                    </Button>
+                    <Button 
+                      onClick={() => window.open('https://www.flipkart.com/search?q=yoga%20mat&otracker=search&otracker1=search&marketplace=FLIPKART&as-show=off&as=off', '_blank')}
+                      variant="outline" 
+                      className="text-xs border-indigo-300 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-900/20"
+                    >
+                      <Heart className="h-3 w-3 mr-1" />
+                      Yoga Mat
+                    </Button>
+                  </div>
+                  
+                  <div className="pt-2 space-y-2">
+                    <p className="text-xs font-medium text-gray-700 dark:text-gray-300">Popular Categories:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {[
+                        { name: "Resistance Bands", url: "https://www.amazon.in/s?k=resistance+bands" },
+                        { name: "Fitness Tracker", url: "https://www.flipkart.com/search?q=fitness+tracker" },
+                        { name: "Vitamins", url: "https://www.amazon.in/s?k=multivitamins" },
+                        { name: "Running Shoes", url: "https://www.flipkart.com/search?q=running+shoes" }
+                      ].map((item, index) => (
+                        <button
+                          key={index}
+                          onClick={() => window.open(item.url, '_blank')}
+                          className="text-xs px-2 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors"
+                        >
+                          {item.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <div className="flex gap-2 w-full">
+                
+                  <Button 
+                    onClick={() => window.open('https://www.amazon.in/s?k=fitness+equipment', '_blank')}
+                    variant="outline" 
+                    className="flex-1 text-xs border-orange-400 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30"
+                  >
+                     <img className="w-8" src={amazonIcon} alt="amazonicon"  />
+                    <span className="text-orange-600 dark:text-orange-400">Amazon</span>
+                  </Button>
+                  <Button 
+                    onClick={() => window.open('https://www.flipkart.com/sports/fitness/pr?sid=qoc%2Cacb', '_blank')}
+                    variant="outline" 
+                    className="flex-1 text-xs border-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                  >
+                  <img className="w-6" src={flipkartIcon} alt="flipkarticon"  />
+                    <span className="text-blue-600 dark:text-blue-400">Flipkart</span>
+                  </Button>
+                </div>
+              </CardFooter>
+            </Card>
+          </div>
           {/* Bottom Chat Button */}
           <div className="text-center">
             <Button 
@@ -897,7 +989,6 @@ const Dashboard = ({ userDetails, setUserDetails, startChat }) => {
           </div>
         </div>
       </div>
-    </div>
   );
 };
 

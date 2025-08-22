@@ -22,11 +22,13 @@ const Onboarding = ({ onComplete }) => {
 
   const goals = [
     "Lose weight",
+    "Gain weight",
     "Gain muscle",
-    "Improve fitness",
+    "Improve overall fitness",
     "Maintain health",
     "Reduce stress",
-    "Better sleep"
+    "Better sleep",
+    "Mental wellness",
   ];
 
   const countries = [
