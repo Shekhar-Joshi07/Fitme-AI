@@ -905,7 +905,7 @@ const Dashboard = ({ userDetails, setUserDetails, startChat }) => {
                       Home Gym
                     </Button>
                     <Button 
-                      onClick={() => window.open('https://www.flipkart.com/search?q=dumbbells&sid=qoc%2Cacb%2Ck03&as=on&as-show=on&otracker=AS_QueryStore_OrganicAutoSuggest_1_5_na_na_na', '_blank')}
+                      onClick={() => window.open('https://www.flipkart.com/search?q=dumbbells&otracker=search&otracker1=search&marketplace=FLIPKART&as-show=off&as=off', '_blank')}
                       variant="outline" 
                       className="text-xs border-indigo-300 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-900/20"
                     >
