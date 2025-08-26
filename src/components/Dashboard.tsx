@@ -620,7 +620,7 @@ const Dashboard = ({ userDetails, setUserDetails, startChat }) => {
               <MessageSquare className="h-4 w-4 mr-2" />
               Chat<Sparkles className="h-4 w-4 ml-2" />
             </Button> */}
-            <Button
+            {/* <Button
               onClick={handleReset}
               variant="outline"
               size="sm"
@@ -628,7 +628,19 @@ const Dashboard = ({ userDetails, setUserDetails, startChat }) => {
             >
               <Settings className="h-4 w-4 mr-2" />
               Reset Profile
+            </Button> */}
+              
+            <Button 
+              onClick={startChat}
+              className="w-30 sm:w-30 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-lg transition-all duration-200 py-3"
+            >
+              <Sparkles className="h-5 w-5 mr-0.3" />
+              AI Health Coach
             </Button>
+            {/* <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">
+              Get personalized advice and answers to all your fitness questions
+            </p> */}
+        
             <ThemeToggle />
           </div>
         </div>
@@ -974,19 +986,17 @@ const Dashboard = ({ userDetails, setUserDetails, startChat }) => {
               </CardFooter>
             </Card>
           </div>
-          {/* Bottom Chat Button */}
-          <div className="text-center">
-            <Button 
-              onClick={startChat}
-              className="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-lg transition-all duration-200 py-6"
+          {/* Bottom Reset Button */}
+          <br />
+           {/* <Button
+              onClick={handleReset}
+              variant="outline"
+              size="sm"
+              className="border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
             >
-              <Sparkles className="h-5 w-5 mr-2" />
-              Chat with Your AI Health Coach
-            </Button>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">
-              Get personalized advice and answers to all your fitness questions
-            </p>
-          </div>
+              <Settings className="h-4 w-4 mr-2" />
+              Reset Profile
+            </Button> */}
         </div>
       </div>
   );

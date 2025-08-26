@@ -19,4 +19,15 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      external: [],
+      output: {
+        manualChunks: undefined,
+      }
+    },
+    // Additional build optimizations for Cloudflare Pages
+    target: 'esnext',
+    minify: 'esbuild',
+  },
 }));
