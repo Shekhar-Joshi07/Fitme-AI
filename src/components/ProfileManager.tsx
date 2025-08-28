@@ -67,7 +67,7 @@ export function ProfileManager() {
     );
   }
 
-  const formatDate = (dateString: string | null | undefined): string => {
+  const formatDate = (dateString: any | null | undefined): any => {
     if (!dateString) return "Not available";
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
