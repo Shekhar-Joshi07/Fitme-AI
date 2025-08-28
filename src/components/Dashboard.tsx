@@ -183,7 +183,7 @@ const UnderweightSVG = () => (
   );
   
 
-const Dashboard = ({ userDetails, setUserDetails, startChat }) => {
+const Dashboard = ({ userDetails, setUserDetails, startChat, onShowProfile }) => {
   const { toast } = useToast();
   const [location, setLocation] = useState(null);
   const [gyms, setGyms] = useState([]);
@@ -595,51 +595,53 @@ const Dashboard = ({ userDetails, setUserDetails, startChat }) => {
       <BmrInfoModal />
       
       {/* Header */}
-      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 p-4 shadow-sm transition-colors duration-300">
+      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 p-3 md:p-4 shadow-sm transition-colors duration-300">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
-              <Heart className="h-5 w-5 text-white" />
+          <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <Heart className="h-4 w-4 md:h-5 md:w-5 text-white" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg md:text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                 FitMe
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Welcome, <span className="font-semibold">{userDetails.name}</span>!
+              <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 truncate">
+                {/* Welcome, <span className="font-semibold">{userDetails.name}</span>! */}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {/* <Button
-              onClick={startChat}
+          
+          <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+            {/* Profile Button - Hidden on mobile, shown on desktop */}
+            <Button
+              onClick={onShowProfile}
               variant="outline"
               size="sm"
-              className="border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
-            >
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Chat<Sparkles className="h-4 w-4 ml-2" />
-            </Button> */}
-            {/* <Button
-              onClick={handleReset}
-              variant="outline"
-              size="sm"
-              className="border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+              className="hidden md:flex border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
             >
               <Settings className="h-4 w-4 mr-2" />
-              Reset Profile
-            </Button> */}
+              Profile
+            </Button>
+            
+            {/* Mobile Profile Button - Icon only */}
+            <Button
+              onClick={onShowProfile}
+              variant="outline"
+              size="sm"
+              className="md:hidden p-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
               
+            {/* AI Health Coach Button - Responsive */}
             <Button 
               onClick={startChat}
-              className="w-30 sm:w-30 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-lg transition-all duration-200 py-3"
+              className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-lg transition-all duration-200 text-xs md:text-sm px-2 md:px-4 py-2 md:py-3"
             >
-              <Sparkles className="h-5 w-5 mr-0.3" />
-              AI Health Coach
+              <Sparkles className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">AI Health Coach</span>
+              <span className="sm:hidden">AI Coach</span>
             </Button>
-            {/* <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">
-              Get personalized advice and answers to all your fitness questions
-            </p> */}
         
             <ThemeToggle />
           </div>

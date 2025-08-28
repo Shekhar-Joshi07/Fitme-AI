@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useUser } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +9,7 @@ import { Heart, Target, Globe, Sparkles, User, CheckCircle, Zap, Calculator, Dum
 import { ThemeToggle } from "./ThemeProvider";
 
 const Onboarding = ({ onComplete }) => {
+  const { user } = useUser();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -19,6 +21,28 @@ const Onboarding = ({ onComplete }) => {
     country: "",
     gender: ""
   });
+
+  // Auto-fill user data from Clerk when component mounts
+  useEffect(() => {
+    if (user) {
+      const firstName = user.firstName || "";
+      const lastName = user.lastName || "";
+      const fullName = `${firstName} ${lastName}`.trim() || user.username || "";
+      
+      // Try to get age from user's public metadata if available
+      let calculatedAge = "";
+      if (user.publicMetadata?.age) {
+        calculatedAge = user.publicMetadata.age.toString();
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        name: fullName,
+        age: calculatedAge,
+        gender: (user.publicMetadata?.gender as string) || ""
+      }));
+    }
+  }, [user]);
 
   const goals = [
     "Lose weight",
@@ -206,7 +230,7 @@ const Onboarding = ({ onComplete }) => {
             </div>
 
             {/* Overall Progress Bar */}
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-xs text-gray-500 dark:text-gray-400">Progress</span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -221,7 +245,7 @@ const Onboarding = ({ onComplete }) => {
                   }}
                 />
               </div>
-            </div>
+            </div> */}
 
             {/* Welcome Message */}
             <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg">
@@ -257,7 +281,7 @@ const Onboarding = ({ onComplete }) => {
           </CardTitle>
           <CardDescription className="text-gray-600 dark:text-gray-300">
             Let's personalize your health journey <br />
-            <span className="text-gray-500 dark:text-gray-400 text-xs">Created with ❤️ by <a href="/" className="text-blue-500 hover:text-blue-600 text-xs">Shekhar Joshi</a></span>
+            <span className="text-gray-500 dark:text-gray-400 text-xs">Created with ❤️ by <a href="https://www.shekharjoshi.dpdns.org" target= "_blank" className="text-blue-500 hover:text-blue-600 text-xs">Shekhar Joshi</a></span>
           </CardDescription>
         </CardHeader>
 
@@ -278,6 +302,12 @@ const Onboarding = ({ onComplete }) => {
                   onChange={(e) => handleInputChange("name", e.target.value)}
                   className="border-gray-200 focus:border-purple-500 dark:bg-gray-200 dark:text-gray-800"
                 />
+                {formData.name && user && (
+                  <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                    <CheckCircle className="h-3 w-3" />
+                    Auto-filled from your account
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -290,11 +320,20 @@ const Onboarding = ({ onComplete }) => {
                   onChange={(e) => handleInputChange("age", e.target.value)}
                   className="border-gray-200 focus:border-purple-500 dark:bg-gray-200 dark:text-gray-800"
                 />
+                {formData.age && user?.publicMetadata?.age && (
+                  <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                    <CheckCircle className="h-3 w-3" />
+                    Auto-filled from your account
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label>What's your gender?</Label>
-                <Select onValueChange={(value) => handleInputChange("gender", value)}>
+                <Select 
+                  value={formData.gender} 
+                  onValueChange={(value) => handleInputChange("gender", value)}
+                >
                   <SelectTrigger className="border-gray-200 focus:border-purple-500 dark:bg-gray-200 dark:text-gray-800">
                     <SelectValue placeholder="Select gender" />
                   </SelectTrigger>
@@ -306,6 +345,12 @@ const Onboarding = ({ onComplete }) => {
                     ))}
                   </SelectContent>
                 </Select>
+                {formData.gender && user?.publicMetadata?.gender && (
+                  <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                    <CheckCircle className="h-3 w-3" />
+                    Auto-filled from your account
+                  </p>
+                )}
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   For accurate health metrics calculation
                 </p>
