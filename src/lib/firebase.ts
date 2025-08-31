@@ -10,15 +10,6 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-// Log configuration for debugging (remove in production)
-console.log('Firebase Config:', {
-  apiKey: firebaseConfig.apiKey ? 'Set' : 'Missing',
-  authDomain: firebaseConfig.authDomain,
-  projectId: firebaseConfig.projectId,
-  storageBucket: firebaseConfig.storageBucket,
-  messagingSenderId: firebaseConfig.messagingSenderId,
-  appId: firebaseConfig.appId ? 'Set' : 'Missing'
-});
 
 // Validate Firebase configuration
 const requiredEnvVars = [
