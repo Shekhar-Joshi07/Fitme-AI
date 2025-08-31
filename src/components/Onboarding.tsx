@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/clerk-react";
+import { useFirebaseUser } from "@/hooks/useFirebaseUser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,7 @@ import { Heart, Target, Globe, Sparkles, User, CheckCircle, Zap, Calculator, Dum
 import { ThemeToggle } from "./ThemeProvider";
 
 const Onboarding = ({ onComplete }) => {
-  const { user } = useUser();
+  const { user } = useFirebaseUser();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -22,24 +22,18 @@ const Onboarding = ({ onComplete }) => {
     gender: ""
   });
 
-  // Auto-fill user data from Clerk when component mounts
+  // Auto-fill user data from Firebase when component mounts
   useEffect(() => {
     if (user) {
       const firstName = user.firstName || "";
       const lastName = user.lastName || "";
-      const fullName = `${firstName} ${lastName}`.trim() || user.username || "";
+      const fullName = `${firstName} ${lastName}`.trim() || user.username || user.fullName || "";
       
-      // Try to get age from user's public metadata if available
-      let calculatedAge = "";
-      if (user.publicMetadata?.age) {
-        calculatedAge = user.publicMetadata.age.toString();
-      }
-
       setFormData(prev => ({
         ...prev,
         name: fullName,
-        age: calculatedAge,
-        gender: (user.publicMetadata?.gender as string) || ""
+        age: "", // Firebase doesn't have built-in age metadata
+        gender: "" // Firebase doesn't have built-in gender metadata
       }));
     }
   }, [user]);
@@ -302,7 +296,7 @@ const Onboarding = ({ onComplete }) => {
                   onChange={(e) => handleInputChange("name", e.target.value)}
                   className="border-gray-200 focus:border-purple-500 dark:bg-gray-200 dark:text-gray-800"
                 />
-                {formData.name && user && (
+                {formData.name && user && user.fullName && (
                   <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
                     <CheckCircle className="h-3 w-3" />
                     Auto-filled from your account
@@ -320,12 +314,7 @@ const Onboarding = ({ onComplete }) => {
                   onChange={(e) => handleInputChange("age", e.target.value)}
                   className="border-gray-200 focus:border-purple-500 dark:bg-gray-200 dark:text-gray-800"
                 />
-                {formData.age && user?.publicMetadata?.age && (
-                  <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
-                    <CheckCircle className="h-3 w-3" />
-                    Auto-filled from your account
-                  </p>
-                )}
+
               </div>
 
               <div className="space-y-2">
@@ -345,12 +334,7 @@ const Onboarding = ({ onComplete }) => {
                     ))}
                   </SelectContent>
                 </Select>
-                {formData.gender && user?.publicMetadata?.gender && (
-                  <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
-                    <CheckCircle className="h-3 w-3" />
-                    Auto-filled from your account
-                  </p>
-                )}
+
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   For accurate health metrics calculation
                 </p>

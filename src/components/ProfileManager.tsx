@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useUser } from "@clerk/clerk-react";
+import { useFirebaseUser } from "@/hooks/useFirebaseUser";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 
 export function ProfileManager() {
-  const { user } = useUser();
+  const { user } = useFirebaseUser();
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -50,11 +50,12 @@ export function ProfileManager() {
 
   const handleDeleteAccount = async () => {
     try {
+      localStorage.clear();
       await user?.delete();
       toast.success("Account deleted successfully!");
       setShowDeleteDialog(false);
-      localStorage.clear();
     } catch (error) {
+      console.log(error.message)
       toast.error("Failed to delete account. Please contact support.");
     }
   };
