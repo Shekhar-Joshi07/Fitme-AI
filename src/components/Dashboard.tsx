@@ -4,6 +4,7 @@ import { Avatar,AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "./ThemeProvider";
+import { AuthButton } from "./AuthButton";
 import { Heart, Dumbbell, Utensils, Calculator, MapPin, ArrowRight, Settings, MessageSquare, Sparkles, Info, ShoppingBag, Package, Zap } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import amazonIcon from "@/assets/icons/icons8-amazon-shopping-app-48.png";
@@ -183,7 +184,7 @@ const UnderweightSVG = () => (
   );
   
 
-const Dashboard = ({ userDetails, setUserDetails, startChat }) => {
+const Dashboard = ({ userDetails, setUserDetails, startChat, onShowProfile }) => {
   const { toast } = useToast();
   const [location, setLocation] = useState(null);
   const [gyms, setGyms] = useState([]);
@@ -606,16 +607,16 @@ const Dashboard = ({ userDetails, setUserDetails, startChat }) => {
                 FitMe
               </h1>
               <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 truncate">
-                {/* Welcome, <span className="font-semibold">{userDetails.name}</span>! */}
+                Welcome, <span className="font-semibold">{userDetails.name}</span>!
               </p>
             </div>
           </div>
           
-          <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
             {/* AI Health Coach Button - Responsive */}
             <Button 
               onClick={startChat}
-              className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-lg transition-all duration-200 text-xs md:text-sm px-2 md:px-4 py-2 md:py-3"
+              className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-lg transition-all duration-200 text-xs md:text-sm px-3 md:px-4 py-2 md:py-3"
             >
               <Sparkles className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />
               <span className="hidden sm:inline">AI Health Coach</span>
@@ -623,6 +624,11 @@ const Dashboard = ({ userDetails, setUserDetails, startChat }) => {
             </Button>
         
             <ThemeToggle />
+            
+            <AuthButton 
+              onShowProfile={onShowProfile}
+              isOnboarded={true}
+            />
           </div>
         </div>
       </div>

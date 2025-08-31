@@ -201,13 +201,7 @@ className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hove
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 dark:from-purple-900/20 dark:via-gray-900 dark:to-blue-900/20 transition-colors duration-300">
-      {/* Auth button in top right corner */}
-      <div className="absolute top-3 right-3 md:top-4 md:right-4 z-10">
-        <AuthButton 
-          onShowProfile={() => setShowProfile(true)}
-          isOnboarded={!!userDetails}
-        />
-      </div>
+
 
       {showProfile ? (
         <div className="min-h-screen p-4 md:p-6">
@@ -217,7 +211,7 @@ className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hove
               variant="ghost"
               className="mb-6 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
             >
-              ← Back to Dashboard
+              ← Dashboard
             </Button>
             <ProfileManager />
           </div>
@@ -235,6 +229,7 @@ className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hove
           userDetails={userDetails}
           setUserDetails={setUserDetails}
           startChat={handleStartChat}
+          onShowProfile={() => setShowProfile(true)}
         />
       )}
     </div>

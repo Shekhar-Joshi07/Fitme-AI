@@ -3,9 +3,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Send, User, Settings, Zap, Heart, Brain, Apple, Trash2, ArrowLeft, Sparkles, Mic, MicOff, Volume2, VolumeX, Menu, X, MessageSquare, Calendar } from "lucide-react";
+import {
+  Send,
+  User,
+  Settings,
+  Zap,
+  Heart,
+  Brain,
+  Apple,
+  Trash2,
+  ArrowLeft,
+  Sparkles,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+  Menu,
+  X,
+  MessageSquare,
+  Calendar,
+} from "lucide-react";
 import { ThemeToggle } from "./ThemeProvider";
-import { format, parseISO } from 'date-fns';
+import { format, parseISO } from "date-fns";
+import { ConfirmDialog } from "./ConfirmDialog";
+import { AuthButton } from "./AuthButton";
 
 declare global {
   interface Window {
@@ -17,26 +38,32 @@ declare global {
 const ChatInterface = ({ userDetails, setUserDetails, onBackToDashboard }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentChatId, setCurrentChatId] = useState(() => {
-    const savedCurrentChat = localStorage.getItem(`current_chat_${userDetails.name}`);
+    const savedCurrentChat = localStorage.getItem(
+      `current_chat_${userDetails.name}`
+    );
     return savedCurrentChat || `chat_${Date.now()}`;
   });
-  
+
   const [chatSessions, setChatSessions] = useState(() => {
-    const savedSessions = localStorage.getItem(`chat_sessions_${userDetails.name}`);
+    const savedSessions = localStorage.getItem(
+      `chat_sessions_${userDetails.name}`
+    );
     return savedSessions ? JSON.parse(savedSessions) : [];
   });
 
-
   const [messages, setMessages] = useState(() => {
-    const savedMessages = localStorage.getItem(`${currentChatId}_${userDetails.name}`);
-    return savedMessages ? JSON.parse(savedMessages) : [
-      {
-        role: "assistant",
-        content: `Hey ${userDetails.name}! 👋 Welcome to FitMe! I'm here to be your personal health and wellness coach. Ready to crush your goals together? 💪`
-      }
-    ];
+    const savedMessages = localStorage.getItem(
+      `${currentChatId}_${userDetails.name}`
+    );
+    return savedMessages
+      ? JSON.parse(savedMessages)
+      : [
+          {
+            role: "assistant",
+            content: `Hey ${userDetails.name}! 👋 Welcome to FitMe! I'm here to be your personal health and wellness coach. Ready to crush your goals together? 💪`,
+          },
+        ];
   });
-
 
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -45,37 +72,65 @@ const ChatInterface = ({ userDetails, setUserDetails, onBackToDashboard }) => {
   const [speechSupported, setSpeechSupported] = useState(false);
   const [currentSpeaking, setCurrentSpeaking] = useState(null);
   const messagesEndRef = useRef(null);
-  const [shouldSaveToLocalStorage, setShouldSaveToLocalStorage] = useState(true);
+  const [shouldSaveToLocalStorage, setShouldSaveToLocalStorage] =
+    useState(true);
   const recognitionRef = useRef(null);
 
+  // Confirmation dialog states
+  const [showDeleteChatDialog, setShowDeleteChatDialog] = useState(false);
+  const [showClearAllDialog, setShowClearAllDialog] = useState(false);
+  const [showResetProfileDialog, setShowResetProfileDialog] = useState(false);
+  const [chatToDelete, setChatToDelete] = useState(null);
+
   const quickPrompts = [
-    { icon: Zap, text: "Suggest a 10-min workout", prompt: "Give me a quick 10-minute workout I can do right now" },
-    { icon: Apple, text: "Healthy snack idea", prompt: "Suggest a healthy snack idea for me" },
-    { icon: Heart, text: "I need motivation today", prompt: "I need some motivation and encouragement today" },
-    { icon: Brain, text: "Help me with stress", prompt: "Give me some tips to manage stress and feel better" }
+    {
+      icon: Zap,
+      text: "Suggest a 10-min workout",
+      prompt: "Give me a quick 10-minute workout I can do right now",
+    },
+    {
+      icon: Apple,
+      text: "Healthy snack idea",
+      prompt: "Suggest a healthy snack idea for me",
+    },
+    {
+      icon: Heart,
+      text: "I need motivation today",
+      prompt: "I need some motivation and encouragement today",
+    },
+    {
+      icon: Brain,
+      text: "Help me with stress",
+      prompt: "Give me some tips to manage stress and feel better",
+    },
   ];
 
   // Initialize current chat session if it doesn't exist
   useEffect(() => {
-    const existingSession = chatSessions.find(session => session.id === currentChatId);
+    const existingSession = chatSessions.find(
+      (session) => session.id === currentChatId
+    );
     if (!existingSession && messages.length > 0) {
       const newSession = {
         id: currentChatId,
         title: generateChatTitle(messages),
         date: new Date().toISOString(),
-        lastMessage: messages[messages.length - 1]?.content || ""
+        lastMessage: messages[messages.length - 1]?.content || "",
       };
       const updatedSessions = [newSession, ...chatSessions];
       setChatSessions(updatedSessions);
-      localStorage.setItem(`chat_sessions_${userDetails.name}`, JSON.stringify(updatedSessions));
+      localStorage.setItem(
+        `chat_sessions_${userDetails.name}`,
+        JSON.stringify(updatedSessions)
+      );
     }
   }, [currentChatId, chatSessions, messages, userDetails.name]);
 
   // Generate chat title based on first user message or default
   const generateChatTitle = (msgs) => {
-    const firstUserMessage = msgs.find(msg => msg.role === "user");
+    const firstUserMessage = msgs.find((msg) => msg.role === "user");
     if (firstUserMessage) {
-      return firstUserMessage.content.length > 40 
+      return firstUserMessage.content.length > 40
         ? firstUserMessage.content.substring(0, 40) + "..."
         : firstUserMessage.content;
     }
@@ -84,33 +139,39 @@ const ChatInterface = ({ userDetails, setUserDetails, onBackToDashboard }) => {
 
   // Update chat session when messages change
   useEffect(() => {
-    if (messages.length > 1) { // More than just the welcome message
-      setChatSessions(prevSessions => {
-        const updatedSessions = prevSessions.map(session => {
+    if (messages.length > 1) {
+      // More than just the welcome message
+      setChatSessions((prevSessions) => {
+        const updatedSessions = prevSessions.map((session) => {
           if (session.id === currentChatId) {
             return {
               ...session,
               title: generateChatTitle(messages),
               lastMessage: messages[messages.length - 1]?.content || "",
-              date: session.date // Keep original date
+              date: session.date, // Keep original date
             };
           }
           return session;
         });
-        
+
         // If current chat doesn't exist in sessions, add it
-        const existingSession = updatedSessions.find(session => session.id === currentChatId);
+        const existingSession = updatedSessions.find(
+          (session) => session.id === currentChatId
+        );
         if (!existingSession) {
           const newSession = {
             id: currentChatId,
             title: generateChatTitle(messages),
             date: new Date().toISOString(),
-            lastMessage: messages[messages.length - 1]?.content || ""
+            lastMessage: messages[messages.length - 1]?.content || "",
           };
           updatedSessions.unshift(newSession);
         }
-        
-        localStorage.setItem(`chat_sessions_${userDetails.name}`, JSON.stringify(updatedSessions));
+
+        localStorage.setItem(
+          `chat_sessions_${userDetails.name}`,
+          JSON.stringify(updatedSessions)
+        );
         return updatedSessions;
       });
     }
@@ -118,13 +179,14 @@ const ChatInterface = ({ userDetails, setUserDetails, onBackToDashboard }) => {
 
   // Initialize speech recognition
   useEffect(() => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
       setSpeechSupported(true);
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = false;
       recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = 'en-US';
+      recognitionRef.current.lang = "en-US";
 
       recognitionRef.current.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
@@ -133,7 +195,7 @@ const ChatInterface = ({ userDetails, setUserDetails, onBackToDashboard }) => {
       };
 
       recognitionRef.current.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
+        console.error("Speech recognition error:", event.error);
         setIsListening(false);
       };
 
@@ -146,7 +208,10 @@ const ChatInterface = ({ userDetails, setUserDetails, onBackToDashboard }) => {
   // Save messages to localStorage whenever they change
   useEffect(() => {
     if (messages.length > 0 && shouldSaveToLocalStorage) {
-      localStorage.setItem(`${currentChatId}_${userDetails.name}`, JSON.stringify(messages));
+      localStorage.setItem(
+        `${currentChatId}_${userDetails.name}`,
+        JSON.stringify(messages)
+      );
     }
   }, [messages, currentChatId, userDetails.name, shouldSaveToLocalStorage]);
 
@@ -169,7 +234,7 @@ const ChatInterface = ({ userDetails, setUserDetails, onBackToDashboard }) => {
     setCurrentChatId(newChatId);
     const welcomeMessage = {
       role: "assistant",
-      content: `Hey ${userDetails.name}! 👋 Welcome to FitMe! I'm here to be your personal health and wellness coach. Ready to crush your goals together? 💪`
+      content: `Hey ${userDetails.name}! 👋 Welcome to FitMe! I'm here to be your personal health and wellness coach. Ready to crush your goals together? 💪`,
     };
     setMessages([welcomeMessage]);
     setSidebarOpen(false);
@@ -185,66 +250,83 @@ const ChatInterface = ({ userDetails, setUserDetails, onBackToDashboard }) => {
       // Fallback to welcome message if no saved messages
       const welcomeMessage = {
         role: "assistant",
-        content: `Hey ${userDetails.name}! 👋 Welcome to FitMe! I'm here to be your personal health and wellness coach. Ready to crush your goals together? 💪`
+        content: `Hey ${userDetails.name}! 👋 Welcome to FitMe! I'm here to be your personal health and wellness coach. Ready to crush your goals together? 💪`,
       };
       setMessages([welcomeMessage]);
     }
     setSidebarOpen(false);
   };
 
-  // Delete individual chat
-  const deleteChat = (chatId, e) => {
+  // Show delete chat confirmation
+  const showDeleteChatConfirmation = (chatId, e) => {
     e.stopPropagation();
-    
+    setChatToDelete(chatId);
+    setShowDeleteChatDialog(true);
+  };
+
+  // Delete individual chat
+  const deleteChat = () => {
+    if (!chatToDelete) return;
+
     // Remove from chat sessions
-    const updatedSessions = chatSessions.filter(session => session.id !== chatId);
+    const updatedSessions = chatSessions.filter(
+      (session) => session.id !== chatToDelete
+    );
     setChatSessions(updatedSessions);
-    localStorage.setItem(`chat_sessions_${userDetails.name}`, JSON.stringify(updatedSessions));
-    
+    localStorage.setItem(
+      `chat_sessions_${userDetails.name}`,
+      JSON.stringify(updatedSessions)
+    );
+
     // Remove chat messages from localStorage
-    localStorage.removeItem(`${chatId}_${userDetails.name}`);
-    
+    localStorage.removeItem(`${chatToDelete}_${userDetails.name}`);
+
     // If we're deleting the current chat, load another chat or create new one
-    if (chatId === currentChatId) {
+    if (chatToDelete === currentChatId) {
       if (updatedSessions.length > 0) {
         loadChat(updatedSessions[0].id);
       } else {
         createNewChat();
       }
     }
+
+    // Reset state
+    setChatToDelete(null);
+    setShowDeleteChatDialog(false);
   };
 
   // Clear all chats
   const clearAllChats = () => {
     // Remove all chat sessions
-    chatSessions.forEach(session => {
+    chatSessions.forEach((session) => {
       localStorage.removeItem(`${session.id}_${userDetails.name}`);
     });
-    
+
     // Clear sessions list
     setChatSessions([]);
     localStorage.removeItem(`chat_sessions_${userDetails.name}`);
-    
+
     // Create new chat
     createNewChat();
+    setShowClearAllDialog(false);
   };
 
   // Text-to-Speech function
   const speakText = (text, messageIndex) => {
-    if ('speechSynthesis' in window) {
+    if ("speechSynthesis" in window) {
       window.speechSynthesis.cancel();
-      
+
       if (currentSpeaking === messageIndex) {
         setCurrentSpeaking(null);
         return;
       }
 
       const cleanText = text
-        .replace(/<[^>]*>/g, '')
-        .replace(/\*\*(.*?)\*\*/g, '$1')
-        .replace(/#{1,6}\s/g, '')
-        .replace(/^-\s/gm, '')
-        .replace(/\n+/g, '. ');
+        .replace(/<[^>]*>/g, "")
+        .replace(/\*\*(.*?)\*\*/g, "$1")
+        .replace(/#{1,6}\s/g, "")
+        .replace(/^-\s/gm, "")
+        .replace(/\n+/g, ". ");
 
       const utterance = new SpeechSynthesisUtterance(cleanText);
       utterance.rate = 0.9;
@@ -270,7 +352,7 @@ const ChatInterface = ({ userDetails, setUserDetails, onBackToDashboard }) => {
   // Speech-to-Text function
   const toggleListening = () => {
     if (!speechSupported) {
-      alert('Speech recognition is not supported in your browser.');
+      alert("Speech recognition is not supported in your browser.");
       return;
     }
 
@@ -282,7 +364,7 @@ const ChatInterface = ({ userDetails, setUserDetails, onBackToDashboard }) => {
         recognitionRef.current?.start();
         setIsListening(true);
       } catch (error) {
-        console.error('Failed to start speech recognition:', error);
+        console.error("Failed to start speech recognition:", error);
         setIsListening(false);
       }
     }
@@ -291,25 +373,28 @@ const ChatInterface = ({ userDetails, setUserDetails, onBackToDashboard }) => {
   // Function to format text with markdown-like syntax
   const formatMessage = (text) => {
     if (!text) return "";
-    
-    let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    
-    formattedText = formattedText.replace(/^# (.*)$/gm, (_, title) => 
-      `<h3 class="text-lg font-bold my-2">${title}</h3>`
+
+    let formattedText = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+
+    formattedText = formattedText.replace(
+      /^# (.*)$/gm,
+      (_, title) => `<h3 class="text-lg font-bold my-2">${title}</h3>`
     );
-    formattedText = formattedText.replace(/^## (.*)$/gm, (_, title) => 
-      `<h4 class="text-md font-semibold my-1">${title}</h4>`
+    formattedText = formattedText.replace(
+      /^## (.*)$/gm,
+      (_, title) => `<h4 class="text-md font-semibold my-1">${title}</h4>`
     );
-    
-    formattedText = formattedText.replace(/^- (.*)$/gm, (_, content) => 
-      `<li class="ml-4">${content}</li>`
+
+    formattedText = formattedText.replace(
+      /^- (.*)$/gm,
+      (_, content) => `<li class="ml-4">${content}</li>`
     );
-    
-    formattedText = formattedText.replace(/\n\n/g, '<br/>');
-    
+
+    formattedText = formattedText.replace(/\n\n/g, "<br/>");
+
     return formattedText;
   };
-   
+
   const handleSubmit = async (e, directPrompt = null) => {
     e?.preventDefault();
     const messageContent = directPrompt || input.trim();
@@ -317,9 +402,9 @@ const ChatInterface = ({ userDetails, setUserDetails, onBackToDashboard }) => {
 
     const userMessage = { role: "user", content: messageContent };
     setInput("");
-    
+
     setShouldSaveToLocalStorage(false);
-    
+
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
     setIsStreaming(true);
@@ -327,14 +412,14 @@ const ChatInterface = ({ userDetails, setUserDetails, onBackToDashboard }) => {
     try {
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
-      const conversationHistory = messages.map(msg => ({
+      const conversationHistory = messages.map((msg) => ({
         parts: [{ text: msg.content }],
-        role: msg.role === "assistant" ? "model" : "user"
+        role: msg.role === "assistant" ? "model" : "user",
       }));
 
       conversationHistory.push({
         parts: [{ text: messageContent }],
-        role: "user"
+        role: "user",
       });
 
       if (messages.length === 1) {
@@ -389,23 +474,23 @@ User Query: ${messageContent}`;
 
         conversationHistory[conversationHistory.length - 1] = {
           parts: [{ text: systemPrompt }],
-          role: "user"
+          role: "user",
         };
       } else {
         const reminder = `[REMEMBER: You are FitBuddy. ONLY answer health/fitness/wellness topics. Redirect everything else.]
          User (${userDetails.name}): ${messageContent}`;
         conversationHistory[conversationHistory.length - 1] = {
           parts: [{ text: reminder }],
-          role: "user"
+          role: "user",
         };
       }
-    
+
       const VITE_GEMINI_URL = import.meta.env.VITE_GEMINI_URL;
       const response = await fetch(VITE_GEMINI_URL, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-goog-api-key': import.meta.env.VITE_GEMINI_API_KEY
+          "Content-Type": "application/json",
+          "X-goog-api-key": import.meta.env.VITE_GEMINI_API_KEY,
         },
         body: JSON.stringify({
           contents: conversationHistory,
@@ -413,9 +498,9 @@ User Query: ${messageContent}`;
             temperature: 0.7,
             maxOutputTokens: 1024,
             topP: 0.8,
-            topK: 10
-          }
-        })
+            topK: 10,
+          },
+        }),
       });
 
       if (!response.ok) {
@@ -423,37 +508,53 @@ User Query: ${messageContent}`;
       }
 
       const data = await response.json();
-      const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't process that request.";
+      const aiResponse =
+        data.candidates?.[0]?.content?.parts?.[0]?.text ||
+        "Sorry, I couldn't process that request.";
 
       setMessages((prev) => {
         const newMessages = [...prev];
-        newMessages[newMessages.length - 1] = { 
-          role: "assistant", 
-          content: aiResponse 
+        newMessages[newMessages.length - 1] = {
+          role: "assistant",
+          content: aiResponse,
         };
         return newMessages;
       });
 
       setShouldSaveToLocalStorage(true);
-    
-      const updatedMessages = [...messages, userMessage, { role: "assistant", content: aiResponse }];
-      localStorage.setItem(`${currentChatId}_${userDetails.name}`, JSON.stringify(updatedMessages));
-    
+
+      const updatedMessages = [
+        ...messages,
+        userMessage,
+        { role: "assistant", content: aiResponse },
+      ];
+      localStorage.setItem(
+        `${currentChatId}_${userDetails.name}`,
+        JSON.stringify(updatedMessages)
+      );
     } catch (error) {
       console.error("Gemini API error:", error);
       let errorMessage = "⚠️ Error connecting to AI. Please try again.";
 
-      if (error.message?.includes('quota')) {
+      if (error.message?.includes("quota")) {
         errorMessage = "⚠️ API quota exceeded. Please try again later.";
-      } else if (error.message?.includes('rate')) {
-        errorMessage = "⚠️ Rate limit exceeded. Please wait a moment and try again.";
+      } else if (error.message?.includes("rate")) {
+        errorMessage =
+          "⚠️ Rate limit exceeded. Please wait a moment and try again.";
       } else if (!navigator.onLine) {
         errorMessage = "⚠️ No internet connection. Please check your network.";
       }
-  
-      const updatedMessages = [...messages, userMessage, { role: "assistant", content: errorMessage }];
+
+      const updatedMessages = [
+        ...messages,
+        userMessage,
+        { role: "assistant", content: errorMessage },
+      ];
       setMessages(updatedMessages);
-      localStorage.setItem(`${currentChatId}_${userDetails.name}`, JSON.stringify(updatedMessages));
+      localStorage.setItem(
+        `${currentChatId}_${userDetails.name}`,
+        JSON.stringify(updatedMessages)
+      );
       setShouldSaveToLocalStorage(true);
     } finally {
       setIsLoading(false);
@@ -468,23 +569,30 @@ User Query: ${messageContent}`;
   const handleReset = () => {
     localStorage.clear();
     setUserDetails(null);
+    setShowResetProfileDialog(false);
   };
 
   return (
     <div className="min-h-screen flex dark:bg-gray-900 transition-colors duration-300">
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-50 w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+      <div
+        className={`${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } fixed inset-y-0 left-0 z-50 w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
+      >
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5 text-purple-500" />
-                <h2 className="font-semibold text-gray-900 dark:text-gray-100">Chat History</h2>
+                <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+                  Chat History
+                </h2>
               </div>
               <div className="flex gap-1">
                 <Button
-                  onClick={clearAllChats}
+                  onClick={() => setShowClearAllDialog(true)}
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 p-0 hover:bg-red-50 dark:hover:bg-red-900/20"
@@ -518,7 +626,7 @@ User Query: ${messageContent}`;
 
           {/* Chat Sessions List */}
           <div className="flex-1 overflow-y-auto px-4">
-            {chatSessions.length === 0  ? (
+            {chatSessions.length === 0 ? (
               <div className="text-center text-gray-500 dark:text-gray-400 py-8">
                 <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-50" />
                 <p>No chat history yet</p>
@@ -532,8 +640,8 @@ User Query: ${messageContent}`;
                     onClick={() => loadChat(session.id)}
                     className={`group p-3 rounded-lg cursor-pointer transition-colors ${
                       session.id === currentChatId
-                        ? 'bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700'
-                        : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                        ? "bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700"
+                        : "hover:bg-gray-50 dark:hover:bg-gray-700"
                     }`}
                   >
                     <div className="flex items-start justify-between">
@@ -544,20 +652,21 @@ User Query: ${messageContent}`;
                         <div className="flex items-center gap-1 mt-1">
                           <Calendar className="h-3 w-3 text-gray-400" />
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {format(parseISO(session.date), 'MMM d, yyyy')}
+                            {format(parseISO(session.date), "MMM d, yyyy")}
                           </p>
                         </div>
                         {session.lastMessage && (
                           <p className="text-xs text-gray-400 mt-1 truncate">
-                            {session.lastMessage.length > 50 
+                            {session.lastMessage.length > 50
                               ? session.lastMessage.substring(0, 50) + "..."
-                              : session.lastMessage
-                            }
+                              : session.lastMessage}
                           </p>
                         )}
                       </div>
                       <Button
-                        onClick={(e) => deleteChat(session.id, e)}
+                        onClick={(e) =>
+                          showDeleteChatConfirmation(session.id, e)
+                        }
                         variant="ghost"
                         size="sm"
                         className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-900/20 ml-2"
@@ -570,20 +679,17 @@ User Query: ${messageContent}`;
               </div>
             )}
           </div>
-                 <Button
-                 
-                disabled={isStreaming}
-                onClick={handleReset}
-                
-                variant="outline"
-                size="sm"
-                style={{ margin: "0.5rem 1rem" , cursor: "pointer"}}
-                className="border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                <Settings className="h-4 w-4 mr-2" color="orange" />
-                Reset Profile
-              </Button>
-
+          <Button
+            disabled={isStreaming}
+            onClick={() => setShowResetProfileDialog(true)}
+            variant="outline"
+            size="sm"
+            style={{ margin: "0.5rem 1rem", cursor: "pointer" }}
+            className="border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+          >
+            <Settings className="h-4 w-4 mr-2" color="orange" />
+            Reset Profile
+          </Button>
         </div>
       </div>
 
@@ -598,38 +704,50 @@ User Query: ${messageContent}`;
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 p-4 shadow-sm transition-colors duration-300">
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 p-3 md:p-4 shadow-sm transition-colors duration-300">
           <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
               <Button
                 onClick={() => setSidebarOpen(true)}
                 variant="ghost"
                 size="sm"
-                className="lg:hidden"
+                className="lg:hidden p-2"
               >
                 <Menu className="h-4 w-4" />
               </Button>
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
-                <Heart className="h-5 w-5 text-white" />
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <Heart className="h-4 w-4 md:h-5 md:w-5 text-white" />
               </div>
-              <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg md:text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                   FitMe
                 </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Your <strong className="text-purple-500">AI<Sparkles className="inline-block w-4 h-4 mb-1 ml-1" /></strong> Health Coach</p>
+                <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 truncate">
+                  Your{" "}
+                  <strong className="text-purple-500">
+                    AI
+                    <Sparkles className="inline-block w-3 h-3 md:w-4 md:h-4 mb-1 ml-1" />
+                  </strong>{" "}
+                  Health Coach
+                </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+
+            <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
               <Button
                 onClick={onBackToDashboard}
                 variant="outline"
                 size="sm"
-                className="border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+                className="border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 p-2 md:px-3 md:py-2"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Back</span>
               </Button>
               <ThemeToggle />
-
+              <AuthButton
+                onShowProfile={() => onBackToDashboard()}
+                isOnboarded={true}
+              />
             </div>
           </div>
         </div>
@@ -646,28 +764,42 @@ User Query: ${messageContent}`;
               >
                 {message.role === "assistant" && (
                   <Avatar className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500">
-                    <AvatarFallback><Sparkles className="text-yellow-500 h-5 w-5" /></AvatarFallback>
+                    <AvatarFallback>
+                      <Sparkles className="text-yellow-500 h-5 w-5" />
+                    </AvatarFallback>
                   </Avatar>
                 )}
-                
+
                 <div className="flex flex-col gap-2">
-                  <Card className={`min-w-[200px] max-w-xs sm:max-w-md lg:max-w-lg p-4 ${
-                    message.role === "user"
-                      ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white"
-                      : "bg-transparent"
-                  }`}>
+                  <Card
+                    className={`min-w-[200px] max-w-xs sm:max-w-md lg:max-w-lg p-4 ${
+                      message.role === "user"
+                        ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white"
+                        : "bg-transparent"
+                    }`}
+                  >
                     {message.role === "assistant" ? (
                       message.content === "" && isStreaming ? (
                         <div className="flex gap-1 items-center">
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mr-2">Thinking</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mr-2">
+                            Thinking
+                          </p>
                           <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
-                          <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                          <div
+                            className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
+                            style={{ animationDelay: "0.1s" }}
+                          ></div>
+                          <div
+                            className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
+                            style={{ animationDelay: "0.2s" }}
+                          ></div>
                         </div>
                       ) : (
-                        <div 
+                        <div
                           className="whitespace-pre-wrap text-sm leading-relaxed"
-                          dangerouslySetInnerHTML={{ __html: formatMessage(message.content) }}
+                          dangerouslySetInnerHTML={{
+                            __html: formatMessage(message.content),
+                          }}
                         />
                       )
                     ) : (
@@ -678,31 +810,39 @@ User Query: ${messageContent}`;
                   </Card>
 
                   {/* Text-to-Speech button for assistant messages */}
-                  {message.role === "assistant" && message.content && message.content !== "" && (
-                    <Button
-                      onClick={() => speakText(message.content, index)}
-                      variant="ghost"
-                      size="sm"
-                      className="w-fit h-6 p-1 hover:bg-purple-100 dark:hover:bg-purple-900/20"
-                      title={currentSpeaking === index ? "Stop speaking" : "Listen to response"}
-                    >
-                      {currentSpeaking === index ? (
-                        <VolumeX className="h-3 w-3 text-purple-500" />
-                      ) : (
-                        <Volume2 className="h-3 w-3 text-purple-500" />
-                      )}
-                    </Button>
-                  )}
+                  {message.role === "assistant" &&
+                    message.content &&
+                    message.content !== "" && (
+                      <Button
+                        onClick={() => speakText(message.content, index)}
+                        variant="ghost"
+                        size="sm"
+                        className="w-fit h-6 p-1 hover:bg-purple-100 dark:hover:bg-purple-900/20"
+                        title={
+                          currentSpeaking === index
+                            ? "Stop speaking"
+                            : "Listen to response"
+                        }
+                      >
+                        {currentSpeaking === index ? (
+                          <VolumeX className="h-3 w-3 text-purple-500" />
+                        ) : (
+                          <Volume2 className="h-3 w-3 text-purple-500" />
+                        )}
+                      </Button>
+                    )}
                 </div>
 
                 {message.role === "user" && (
                   <Avatar className="w-8 h-8 bg-gray-100 dark:bg-gray-700">
-                    <AvatarFallback><User className="h-4 w-4 dark:text-gray-300" /></AvatarFallback>
+                    <AvatarFallback>
+                      <User className="h-4 w-4 dark:text-gray-300" />
+                    </AvatarFallback>
                   </Avatar>
                 )}
               </div>
             ))}
-            
+
             <div ref={messagesEndRef} />
           </div>
         </div>
@@ -721,7 +861,9 @@ User Query: ${messageContent}`;
                 >
                   <div className="flex items-center gap-2">
                     <prompt.icon className="h-4 w-4 text-purple-500 dark:text-purple-400" />
-                    <span className="text-xs dark:text-gray-300">{prompt.text}</span>
+                    <span className="text-xs dark:text-gray-300">
+                      {prompt.text}
+                    </span>
                   </div>
                 </Button>
               ))}
@@ -742,9 +884,9 @@ User Query: ${messageContent}`;
                     type="button"
                     onClick={toggleListening}
                     className={`absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 ${
-                      isListening 
-                        ? 'bg-red-500 hover:bg-red-600 text-white' 
-                        : 'bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700'
+                      isListening
+                        ? "bg-red-500 hover:bg-red-600 text-white"
+                        : "bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700"
                     }`}
                     disabled={isLoading}
                     title={isListening ? "Stop listening" : "Start voice input"}
@@ -776,6 +918,43 @@ User Query: ${messageContent}`;
           </div>
         </div>
       </div>
+
+      {/* Confirmation Dialogs */}
+      <ConfirmDialog
+        open={showDeleteChatDialog}
+        onOpenChange={(open) => {
+          setShowDeleteChatDialog(open);
+          if (!open) setChatToDelete(null);
+        }}
+        onConfirm={deleteChat}
+        title="Delete Chat"
+        description="Are you sure you want to delete this chat? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+      />
+
+      <ConfirmDialog
+        open={showClearAllDialog}
+        onOpenChange={setShowClearAllDialog}
+        onConfirm={clearAllChats}
+        title="Clear All Chats"
+        description="Are you sure you want to delete all your chat history? This action cannot be undone and all conversations will be permanently lost."
+        confirmText="Clear All"
+        cancelText="Cancel"
+        variant="destructive"
+      />
+
+      <ConfirmDialog
+        open={showResetProfileDialog}
+        onOpenChange={setShowResetProfileDialog}
+        onConfirm={handleReset}
+        title="Reset Profile"
+        description="Are you sure you want to reset your profile? This will delete all your data including chat history, user details, and preferences. This action cannot be undone."
+        confirmText="Reset Profile"
+        cancelText="Cancel"
+        variant="destructive"
+      />
     </div>
   );
 };

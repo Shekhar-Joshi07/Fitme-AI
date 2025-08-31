@@ -72,9 +72,9 @@ export function AuthButton({ onShowProfile, isOnboarded = false }) {
     return (
       <div className="flex items-center gap-2">
         {/* Welcome message - hidden on mobile */}
-        <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400 truncate">
+        {/* <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400 truncate">
           Welcome, {user?.firstName || user?.username || "User"}!
-        </span>
+        </span> */}
         {/* User dropdown with better styling */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
