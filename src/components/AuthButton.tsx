@@ -1,8 +1,4 @@
-import {
-  signInWithPopup,
-  GoogleAuthProvider,
-  signOut,
-} from "firebase/auth";
+import { signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,7 +13,7 @@ import { LogOut, User, Settings } from "lucide-react";
 import { useFirebaseUser } from "@/hooks/useFirebaseUser";
 import { toast } from "sonner";
 
-export function AuthButton() {
+export function AuthButton({ onShowProfile, isOnboarded = false }) {
   const { isSignedIn, user } = useFirebaseUser();
 
   const handleGoogleSignIn = async () => {
@@ -113,15 +109,23 @@ export function AuthButton() {
               </div>
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="hover:bg-purple-50 dark:hover:bg-purple-900/20">
-              <User className="mr-2 h-4 w-4" />
-              <span>Profile</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="hover:bg-purple-50 dark:hover:bg-purple-900/20">
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            {/* Only show profile options if user is onboarded */}
+            {isOnboarded && (
+              <>
+                <DropdownMenuItem
+                  className="hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                  onClick={onShowProfile}
+                >
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="hover:bg-purple-50 dark:hover:bg-purple-900/20">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
             <DropdownMenuItem
               className="hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400"
               onClick={handleSignOut}

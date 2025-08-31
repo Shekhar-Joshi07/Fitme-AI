@@ -183,7 +183,7 @@ const UnderweightSVG = () => (
   );
   
 
-const Dashboard = ({ userDetails, setUserDetails, startChat, onShowProfile }) => {
+const Dashboard = ({ userDetails, setUserDetails, startChat }) => {
   const { toast } = useToast();
   const [location, setLocation] = useState(null);
   const [gyms, setGyms] = useState([]);
@@ -612,27 +612,6 @@ const Dashboard = ({ userDetails, setUserDetails, startChat, onShowProfile }) =>
           </div>
           
           <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-            {/* Profile Button - Hidden on mobile, shown on desktop */}
-            <Button
-              onClick={onShowProfile}
-              variant="outline"
-              size="sm"
-              className="hidden md:flex border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              Profile
-            </Button>
-            
-            {/* Mobile Profile Button - Icon only */}
-            <Button
-              onClick={onShowProfile}
-              variant="outline"
-              size="sm"
-              className="md:hidden p-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
-              
             {/* AI Health Coach Button - Responsive */}
             <Button 
               onClick={startChat}
